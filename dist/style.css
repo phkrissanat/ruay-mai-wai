@@ -225,3 +225,6 @@ html[data-theme=dark]{--ink:#f4f7f5;--muted:#c2cec6;--line:#46564c;--accent:#a5e
 .comparison-panel h3{font-size:21px}
 
 header .brand{font-size:33px}
+
+.summary-heading .range{font-size:16.5px;white-space:normal;overflow:visible;text-overflow:clip;flex:1 1 auto}
+#metrics .card:nth-child(-n+2) small:first-child{font-size:16.5px}

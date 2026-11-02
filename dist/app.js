@@ -23,7 +23,7 @@ function render(){
  $('#count').textContent=records.length+' รายการ';$('#heroTotal').textContent='฿'+num(stats(records).total);
  const kind=summaryPeriod,date=new Date(),range=bounds(kind,date),previous=bounds(kind,date,-1),a=stats(records,range),b=stats(records,previous);
  const df=n=>new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',dateStyle:'medium'}).format(n);
- const compact=n=>new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'short'}).format(n);const rangeLabel=kind==='year'?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',year:'numeric'}).format(range[0]):kind==='month'?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',month:'short',year:'2-digit'}).format(range[0]):compact(range[0])+'–'+compact(range[1]-1);$('#range').textContent=rangeLabel;$('#range').title=df(range[0])+' – '+df(range[1]-1)+' · เทียบ '+df(previous[0])+' – '+df(previous[1]-1);
+ const compact=n=>new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'long',year:'numeric'}).format(n);const rangeLabel=kind==='year'?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',year:'numeric'}).format(range[0]):kind==='month'?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',month:'long',year:'numeric'}).format(range[0]):compact(range[0])+'–'+compact(range[1]-1);$('#range').textContent=rangeLabel;$('#range').title=df(range[0])+' – '+df(range[1]-1)+' · เทียบ '+df(previous[0])+' – '+df(previous[1]-1);
  $('#metrics').innerHTML=metric('ค่าใช้จ่าย',a.total,'บาท',a.total,b.total)+metric('ราคาน้ำมันเฉลี่ย',a.price,'บาท/ลิตร',a.price,b.price)+(a.efficiency!==null?metric('ประสิทธิภาพ',a.efficiency,'km/L',a.efficiency,b.efficiency):'');
 
  renderComparison();
@@ -114,8 +114,10 @@ function showQuote(){
  const impactText=impact?'<div class="announcement-impact '+(p.delta>0?'price-up':'price-down')+'">ส่วนต่างปริมาณน้ำมัน <span>'+(impact.litersChange>0?'+':'')+num(impact.litersChange,3)+' ลิตร</span></div>':'';
  const announcement=p.upcoming?'<div class="price-announcement"><span class="announcement-label">ประกาศปรับราคาใหม่'+(pricePreview?' <small>จำลอง</small>':'')+'</span><div class="price-effective">'+esc(fullDate(p.effectiveText))+'</div><div class="announcement-price"><strong>'+num(p.tomorrow)+'</strong> <span class="price-change '+(p.delta>0?'price-up':'price-down')+'">('+(p.delta>0?'+':'')+num(p.delta)+')</span> <small>บาท/ลิตร</small></div>'+impactText+'</div>':'<div class="no-announcement">ยังไม่มีราคาใหม่</div>';
  const checkedAt=Date.parse(displayed.fetchedAt);
- const checkedText=Number.isFinite(checkedAt)?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'long',year:'numeric'}).format(new Date(checkedAt))+' เวลา '+new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date(checkedAt))+' น.':'—';
- const checked='<div class="price-effective price-checked">ตรวจสอบล่าสุด<br>'+esc(checkedText)+'</div>';
+ const checkedDate=Number.isFinite(checkedAt)?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'long',year:'numeric'}).format(new Date(checkedAt)):'—';
+ const checkedTime=Number.isFinite(checkedAt)?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(checkedAt)):null;
+ const checked='<div class="price-effective price-checked"><div>ตรวจสอบล่าสุด</div><div>'+esc(checkedDate)+'</div>'+(checkedTime?'<div>เวลา '+esc(checkedTime)+' น.</div>':'')+'</div>';
+
  target.innerHTML='<div class="price-overview"><div class="price-current"><span class="selected-price-value">'+num(p.today)+' <small>บาท/ลิตร'+(fresh?'':' · ข้อมูลล่าสุดที่เก็บไว้')+'</small></span></div><div class="price-adjustment">'+announcement+checked+'</div></div>';
 
 }
