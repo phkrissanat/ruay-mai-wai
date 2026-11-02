@@ -242,3 +242,12 @@ header .brand{font-size:33px}
 .metric-difference.delta-down{color:#218347}
 [data-theme=dark] .metric-difference.delta-up{color:#ffaaaa}
 [data-theme=dark] .metric-difference.delta-down{color:#9be8b7}
+
+.comparison-panel h3{font-size:31.5px;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;line-height:1.4}
+.comparison-panel h3 .unit{font-size:16.5px;margin-left:0}
+.comparison-panel svg text{font-size:13.5px}
+.comparison-panel .chart-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;font-size:16.5px;line-height:1.6}
+.comparison-panel .chart-legend span{min-width:0;gap:6px}
+.comparison-panel .chart-legend span:last-child{grid-column:1/-1}
+.comparison-panel .chart-legend i{flex:0 0 20px}
+.comparison-panel .chart{margin-top:18px}
