@@ -228,3 +228,8 @@ header .brand{font-size:33px}
 
 .summary-heading .range{font-size:16.5px;white-space:normal;overflow:visible;text-overflow:clip;flex:1 1 auto}
 #metrics .card:nth-child(-n+2) small:first-child{font-size:16.5px}
+
+#metrics .card:nth-child(-n+2) small{font-size:16.5px}
+#metrics .card:nth-child(-n+2) strong{font-size:46.5px}
+#metrics .card:nth-child(-n+2) p{font-size:15px}
+@media(max-width:360px){#metrics .card:nth-child(-n+2) strong{font-size:42px}}
