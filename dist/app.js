@@ -38,7 +38,7 @@ function renderComparison(){
  const baseY=baseline===null?null:y(baseline),reference=baseline===null?'':'<line x1="'+left+'" x2="'+(w-right)+'" y1="'+baseY+'" y2="'+baseY+'" stroke="#88988d" stroke-dasharray="5 4"/>';
  const line=baseline===null?'<path d="'+path+'" fill="none" stroke="#88988d" stroke-width="2.5"/>':'<defs><clipPath id="above-average"><rect x="0" y="0" width="'+w+'" height="'+baseY+'"/></clipPath><clipPath id="below-average"><rect x="0" y="'+baseY+'" width="'+w+'" height="'+h+'"/></clipPath></defs><path d="'+path+'" fill="none" stroke="#c53232" stroke-width="2.5" clip-path="url(#above-average)"/><path d="'+path+'" fill="none" stroke="#218347" stroke-width="2.5" clip-path="url(#below-average)"/>';
  const dots=points.map(p=>'<circle cx="'+x(p.time)+'" cy="'+y(p.price)+'" r="3" fill="'+priceColor(p.price,baseline)+'"><title>'+(p.current?'ราคาปัจจุบัน':'ราคาที่บันทึก')+': '+num(p.price)+' บาท/ลิตร</title></circle>').join('');
- $('.comparison-panel h3').innerHTML=esc(fuel)+' <span class="unit">บาท/ลิตร</span>';
+ $('.comparison-panel h3').textContent=fuel;
  $('.comparison-panel .chart-legend').innerHTML='<span><i class="higher"></i>สูงกว่าเฉลี่ย</span><span><i class="lower"></i>ต่ำกว่าเฉลี่ย</span><span><i class="previous"></i>ราคาเฉลี่ย '+num(baseline)+' บาท/ลิตร</span>';
  $('#chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(fuel)+' เส้นราคาเทียบราคาเฉลี่ย"><title>'+esc(fuel)+' · ราคาเฉลี่ยจากบันทึก '+num(baseline)+' บาท/ลิตร</title>'+grid+ticks+reference+line+dots+'</svg>';
 }

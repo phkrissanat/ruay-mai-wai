@@ -251,3 +251,5 @@ header .brand{font-size:33px}
 .comparison-panel .chart-legend span:last-child{grid-column:1/-1}
 .comparison-panel .chart-legend i{flex:0 0 20px}
 .comparison-panel .chart{margin-top:18px}
+
+.comparison-panel h3{justify-content:center;text-align:center}
