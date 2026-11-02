@@ -3,6 +3,7 @@ export const FUELS=['แก๊สโซฮอล์ 95','แก๊สโซฮ�
 export const offset=7*3600000;
 export function localTime(d=new Date()){return new Date(+d+offset).toISOString().slice(0,16)}
 export function parseLocal(v){
+ if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v))v+='T00:00';
  if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)) throw Error('วันเวลาไม่ถูกต้อง');
  const d=new Date(v+':00+07:00');
  if(!Number.isFinite(+d)||localTime(d)!==v) throw Error('วันเวลาไม่มีอยู่จริง');
@@ -32,7 +33,7 @@ export function validate(x){
 export function bounds(kind,date=new Date(),shift=0){
  const d=new Date(+date+offset);let y=d.getUTCFullYear(),m=d.getUTCMonth(),day=d.getUTCDate();
  let a,b;
- if(kind==='week'){const mon=day-((d.getUTCDay()+6)%7)+shift*7;a=Date.UTC(y,m,mon);b=a+7*86400000}
+ if(kind==='week'){const sunday=day-d.getUTCDay()+shift*7;a=Date.UTC(y,m,sunday);b=a+7*86400000}
  else if(kind==='month'){a=Date.UTC(y,m+shift,1);b=Date.UTC(y,m+shift+1,1)}
  else {a=Date.UTC(y+shift,0,1);b=Date.UTC(y+shift+1,0,1)}
  return [a-offset,b-offset];

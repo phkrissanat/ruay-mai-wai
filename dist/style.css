@@ -68,3 +68,160 @@ nav{grid-template-columns:repeat(2,minmax(0,1fr))}.selected-price{margin:12px 0 
 .price-impact{font-size:12px;color:var(--accent);margin:8px 0 0;line-height:1.6}
 
 #backupStatus{font-size:10px;color:var(--muted)}
+
+/* Simplified home screen */
+#backupStatus,#network{display:none!important}
+.fuel-picker>span{text-align:center}
+.selected-price-row{flex-wrap:wrap;align-items:baseline;row-gap:4px}
+.selected-price-value{font-size:72px;line-height:1.2}
+.selected-price-meta>a,.selected-price-meta>span:last-child{display:none}
+
+/* Home title and announcement comparison */
+header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+header .brand{grid-column:2;text-align:center}
+header .header-actions{grid-column:3;justify-self:end}
+footer{display:none}
+.price-effective{font-size:10px;color:var(--muted);text-align:left;margin-top:5px}
+.current-effective{width:100%;align-self:flex-start}
+.price-announcement{margin-top:15px;padding:14px;background:#edf3ec;border-radius:11px}
+.announcement-price{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:5px 12px;font-size:12px}
+.announcement-price strong{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.price-impact{font-size:11px;margin-top:12px;padding-top:10px;border-top:1px solid #d7e2d3}
+.price-impact strong{display:block;font-size:14px;font-weight:500;margin-top:4px}
+.no-announcement{font-size:11px;color:var(--muted);margin-top:12px}
+
+/* Current price and announcement on one horizontal level */
+.price-overview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center;container-type:inline-size;margin:18px 0 20px}
+.price-current,.price-adjustment{min-width:0}
+.price-current .selected-price-value{display:block;font-size:clamp(40px,17cqi,72px);line-height:1.15}
+.price-current .selected-price-value small{display:block;font-size:10px;white-space:normal;line-height:1.5;margin-top:4px}
+.price-adjustment{text-align:right;overflow-wrap:anywhere}
+.price-adjustment .price-announcement{margin:0;padding:0;background:transparent;border-radius:0}
+.price-adjustment .announcement-price{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px}
+.price-adjustment .announcement-price strong{font-size:20px}
+.price-adjustment .price-effective{text-align:right;font-size:10px;line-height:1.6;margin-top:6px}
+.price-adjustment .no-announcement{margin:0;font-size:11px}
+.price-adjustment .price-impact{font-size:10px;line-height:1.6;margin-top:10px;padding-top:8px}
+.price-adjustment .price-impact strong{font-size:12px}
+
+/* Larger fuel controls and price announcement */
+.fuel-picker>span{font-size:36px;line-height:1.4;margin-bottom:14px}
+.fuel-buttons button{font-size:19.5px}
+.price-current .selected-price-value{position:relative;display:inline-block;padding-top:18px}
+.price-current .selected-price-value small{position:absolute;top:0;right:0;display:block;text-align:right;font-size:10px;line-height:1.4;margin:0;max-width:100%}
+.price-adjustment .announcement-price,.price-adjustment .no-announcement{font-size:16.5px}
+.price-adjustment .announcement-price strong{font-size:30px}
+.price-adjustment .price-change{font-size:18px}
+.price-adjustment .price-effective{font-size:15px}
+.price-adjustment .price-impact{font-size:15px}
+.price-adjustment .price-impact strong{font-size:18px}
+
+/* Compact announcement layout */
+.price-overview{align-items:start;gap:18px;margin:14px 0 12px}
+.price-adjustment{text-align:left;padding-top:2px}
+.price-adjustment .announcement-label{display:block;font-size:12px;color:var(--muted);margin-bottom:1px}
+.price-adjustment .announcement-price{display:flex;flex-direction:row;align-items:baseline;justify-content:flex-start;gap:5px;white-space:nowrap}
+.price-adjustment .announcement-price strong{font-size:30px;line-height:1.3;font-weight:500}
+.price-adjustment .announcement-price small{font-size:10px;color:var(--muted)}
+.price-adjustment .price-change{display:block;text-align:left;font-size:18px;line-height:1.5;margin-top:1px}
+.price-adjustment .price-effective{text-align:left;font-size:15px;line-height:1.5;margin-top:5px}
+.price-adjustment .no-announcement{font-size:16.5px;line-height:1.5}
+.selected-price>.price-impact{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:10px 12px;margin:10px 0 14px;background:#edf3ec;border:0;border-radius:9px;font-size:13px}
+.selected-price>.price-impact strong{display:block;font-size:16px;line-height:1.5;margin:0;font-weight:500}
+.selected-price>.price-impact strong span{white-space:nowrap}
+
+.selected-price>.price-impact strong{font-size:18px}
+
+/* Announcement: heading, effective date, price, volume difference */
+.price-adjustment .announcement-label{font-size:14px;line-height:1.5;margin:0 0 4px;white-space:nowrap;color:var(--text)}
+.announcement-label small{font-size:9px;color:var(--muted)}
+.price-adjustment .price-effective{font-size:12px;line-height:1.6;margin:0 0 4px;white-space:nowrap}
+.price-adjustment .announcement-price{display:block;font-size:14px;white-space:nowrap;line-height:1.6}
+.price-adjustment .announcement-price strong{font-size:23px;line-height:1.4}
+.price-adjustment .announcement-price .price-change{display:inline;font-size:14px;margin:0}
+.price-adjustment .price-change.price-up{color:#c53232}
+.price-adjustment .price-change.price-down{color:#218347}
+.price-adjustment .announcement-price small{font-size:10px}
+.announcement-impact{font-size:12px;line-height:1.6;margin-top:4px;white-space:nowrap;color:var(--muted)}
+.announcement-impact span{color:var(--text)}
+@media(max-width:380px){.price-overview{grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr);gap:10px}.price-current .selected-price-value{font-size:clamp(36px,14cqi,52px)}.price-adjustment .announcement-label{font-size:12px}.price-adjustment .price-effective,.announcement-impact{font-size:10px}.price-adjustment .announcement-price strong{font-size:21px}.price-adjustment .announcement-price .price-change{font-size:12px}.price-adjustment .announcement-price small{font-size:9px}}
+
+.announcement-impact.price-up,.announcement-impact.price-up span{color:#c53232}
+.announcement-impact.price-down,.announcement-impact.price-down span{color:#218347}
+
+#metrics .card:nth-child(-n+2),#metrics .card:nth-child(-n+2)>*{text-align:center}
+
+.comparison-panel .chart{overflow-x:auto;-webkit-overflow-scrolling:touch}.comparison-panel .chart-legend{gap:14px;flex-wrap:wrap}.comparison-panel .chart-legend i{height:8px;border:0;width:12px;background:#285b45;border-radius:2px}.comparison-panel .chart-legend i.previous{background:#a0aaa4;border:0}
+
+.comparison-panel .chart{overflow:visible}.comparison-panel .chart-legend i{height:0;width:20px;border-top:2px solid #285b45;background:none;border-radius:0}.comparison-panel .chart-legend i.previous{background:none;border-top:2px dashed #88988d}
+
+.comparison-panel .chart-legend i.higher{border-color:#c53232}.comparison-panel .chart-legend i.lower{border-color:#218347}
+
+.record-menu{display:flex;align-items:center}.record-menu summary{list-style:none;cursor:pointer;min-width:32px;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:24px}.record-menu summary::-webkit-details-marker{display:none}.record-menu[open]{display:flex}.record-menu .history-actions{display:flex;gap:4px}.record-menu:not([open]) .history-actions{display:none}.record-menu .history-actions button{font-size:20px;padding:5px 8px}.history-table th,.history-table td{padding-left:6px;padding-right:6px}
+
+.record-menu summary::before,.record-menu summary::after{content:none!important}.record-menu summary{padding:0;margin:0;border:0}.record-menu{padding:0;margin:0;border:0}
+
+.history-table{font-size:16px}.record-menu summary{font-size:36px}.record-menu .history-actions button{font-size:30px}
+
+:root{--text:var(--ink)}
+header .header-actions{position:absolute;right:16px;top:50%;transform:translateY(-50%)}
+#themeToggle{width:40px;height:40px;padding:8px;border:0;background:transparent;border-radius:50%;color:var(--ink)}
+#themeToggle:hover{background:#e8ede7}#themeToggle svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+html[data-theme=dark]{color-scheme:dark;--ink:#e8eee9;--muted:#a1ada5;--line:#303b34;--accent:#91c9a9;--bg:#151b17;background:#0e1310}
+[data-theme=dark] body{background:var(--bg);border-color:var(--line)}
+[data-theme=dark] header{background:#151b17ee}
+[data-theme=dark] nav{background:#1a221dee}
+[data-theme=dark] .card,[data-theme=dark] .panel,[data-theme=dark] button,[data-theme=dark] input,[data-theme=dark] select,[data-theme=dark] textarea{background:#202a23;border-color:var(--line)}
+[data-theme=dark] button:hover,[data-theme=dark] #themeToggle:hover{background:#2a382f}
+[data-theme=dark] .fuel-buttons button.selected,[data-theme=dark] nav button.active{background:#304d3c;color:#b9e4cb}
+[data-theme=dark] nav button{background:transparent;color:var(--muted)}
+[data-theme=dark] .period-buttons{background:#202a23}
+[data-theme=dark] .period-buttons button{background:transparent;color:var(--muted)}
+[data-theme=dark] .period-buttons button.selected{background:#35483b;color:var(--ink)}
+[data-theme=dark] .primary{background:#53896a;color:#fff;border-color:#53896a}
+[data-theme=dark] th,[data-theme=dark] td{border-color:var(--line)}
+[data-theme=dark] .card p,[data-theme=dark] summary{color:var(--muted)}
+[data-theme=dark] .comparison-panel svg text{fill:var(--muted)}
+[data-theme=dark] .comparison-panel svg line[stroke="#edf0eb"]{stroke:#303b34}
+[data-theme=dark] .price-up,[data-theme=dark] .announcement-impact.price-up,[data-theme=dark] .announcement-impact.price-up span{color:#ff8c8c}
+[data-theme=dark] .price-down,[data-theme=dark] .announcement-impact.price-down,[data-theme=dark] .announcement-impact.price-down span{color:#8bd5a3}
+
+[data-theme=dark] .fuel-buttons button,[data-theme=dark] .amount-label input{color:var(--ink)}[data-theme=dark] .amount-label{color:var(--muted)}[data-theme=dark] .price-adjustment .announcement-price .price-change.price-up{color:#ff8c8c}[data-theme=dark] .price-adjustment .announcement-price .price-change.price-down{color:#8bd5a3}
+
+/* Clearer contrast in dark mode */
+html[data-theme=dark]{--ink:#f4f7f5;--muted:#c2cec6;--line:#46564c;--accent:#a5e2bd;--bg:#18201b;background:#101612}
+[data-theme=dark] header{background:#18201bf5}
+[data-theme=dark] nav{background:#202b24f5}
+[data-theme=dark] .card,[data-theme=dark] .panel{background:#26332b;border-color:#465b4d}
+[data-theme=dark] input,[data-theme=dark] select,[data-theme=dark] textarea,[data-theme=dark] .fuel-buttons button{background:#253229;border-color:#506455;color:var(--ink)}
+[data-theme=dark] input::placeholder{color:#b7c5bc;opacity:1}
+[data-theme=dark] .fuel-buttons button.selected,[data-theme=dark] nav button.active{background:#41634e;color:#fff;border-color:#a5e2bd}
+[data-theme=dark] .period-buttons{background:#26332b}
+[data-theme=dark] .period-buttons button.selected{background:#4b6a55;color:#fff}
+[data-theme=dark] .card strong{color:#fff}
+[data-theme=dark] .card p{color:#e2ece5}
+[data-theme=dark] .price-effective,[data-theme=dark] .announcement-label small,[data-theme=dark] .selected-price-value small,[data-theme=dark] .announcement-price small,[data-theme=dark] .range,[data-theme=dark] .unit,[data-theme=dark] .amount-label{color:#c2cec6}
+[data-theme=dark] .price-adjustment .announcement-label{color:#fff}
+[data-theme=dark] .primary{background:#55896a;border-color:#83b496;color:#fff}
+[data-theme=dark] button:disabled{opacity:.75;color:#fff}
+[data-theme=dark] .price-adjustment .announcement-price .price-change.price-up,[data-theme=dark] .announcement-impact.price-up,[data-theme=dark] .announcement-impact.price-up span{color:#ffaaaa}
+[data-theme=dark] .price-adjustment .announcement-price .price-change.price-down,[data-theme=dark] .announcement-impact.price-down,[data-theme=dark] .announcement-impact.price-down span{color:#9be8b7}
+[data-theme=dark] .comparison-panel svg text{fill:#d3dfd7}
+[data-theme=dark] .comparison-panel svg [stroke="#c53232"]{stroke:#ffaaaa}
+[data-theme=dark] .comparison-panel svg [stroke="#218347"]{stroke:#9be8b7}
+[data-theme=dark] .comparison-panel svg [stroke="#88988d"]{stroke:#c2cec6}
+[data-theme=dark] .comparison-panel svg [fill="#c53232"]{fill:#ffaaaa}
+[data-theme=dark] .comparison-panel svg [fill="#218347"]{fill:#9be8b7}
+[data-theme=dark] .comparison-panel svg [fill="#88988d"]{fill:#c2cec6}
+[data-theme=dark] .comparison-panel svg line[stroke="#edf0eb"]{stroke:#46564c}
+[data-theme=dark] .comparison-panel .chart-legend i.higher{border-color:#ffaaaa}
+[data-theme=dark] .comparison-panel .chart-legend i.lower{border-color:#9be8b7}
+[data-theme=dark] .comparison-panel .chart-legend i.previous{border-color:#c2cec6}
+
+.amount-save-row>button[type=submit]{font-size:22.5px}
+
+.period-buttons button{font-size:19.5px}
+
+.comparison-panel h3{font-size:21px}
+
+header .brand{font-size:33px}
