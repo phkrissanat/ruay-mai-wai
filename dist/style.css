@@ -236,3 +236,9 @@ header .brand{font-size:33px}
 
 .summary-heading .range{white-space:nowrap;flex:0 0 auto}
 .dashboard-title>.summary-heading{flex-wrap:wrap}
+
+.metric-difference{display:block}
+.metric-difference.delta-up{color:#c53232}
+.metric-difference.delta-down{color:#218347}
+[data-theme=dark] .metric-difference.delta-up{color:#ffaaaa}
+[data-theme=dark] .metric-difference.delta-down{color:#9be8b7}

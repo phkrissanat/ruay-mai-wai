@@ -17,7 +17,7 @@ async function load(){records=await tx('records','readonly',s=>s.getAll());rende
 const cloudBackup=createFirebaseBackup(firebaseConfig,{onStatus:(state,detail)=>{const el=$('#backupStatus');el.dataset.state=state;el.textContent=({synced:'สำรองแล้ว',pending:'รอสำรอง','too-large':'ข้อมูลสำรองเกินขนาด'})[state]||'';el.title=detail||''}});
 let backupWarning=false;
 function backup(){try{saveBackup(records,defaultFuel);cloudBackup.enqueue(records,defaultFuel)}catch{if(!backupWarning){backupWarning=true;toast('สำรองข้อมูลอัตโนมัติไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม')}}}
-function delta(c,p,unit){const d=change(c,p),signed=v=>v==null?'—':(v>0?'+':'')+num(v);return 'ส่วนต่าง '+signed(d.amount)+' '+unit+' ('+signed(d.percent)+'%)'}
+function delta(c,p,unit){const d=change(c,p),signed=v=>v==null?'—':(v>0?'+':'')+num(v),tone=v=>v>0?'delta-up':v<0?'delta-down':'delta-neutral';return '<span class="metric-difference '+tone(d.amount)+'">'+signed(d.amount)+' '+unit+'</span><span class="metric-difference '+tone(d.percent)+'">'+signed(d.percent)+'%</span>'}
 const metric=(title,value,unit,c,p)=>'<div class="card"><small>'+title+'</small><strong>'+num(value)+'</strong><small>'+unit+'</small><p>'+delta(c,p,unit)+'</p></div>';
 function render(){
  $('#count').textContent=records.length+' รายการ';$('#heroTotal').textContent='฿'+num(stats(records).total);
