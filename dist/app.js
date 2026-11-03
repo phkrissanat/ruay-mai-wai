@@ -1,17 +1,17 @@
 import {PRICE_ENDPOINT} from './price-config.js';
 import {firebaseConfig} from './firebase-config.js';
-import {createFirebaseBackup} from './firebase-backup.js';
-import {saveBackup,latestBackup} from './backup.js';
+import {createFirebaseBackup} from './firebase-backup.js?v=49';
+import {saveBackup,latestBackup} from './backup.js?v=49';
 import {priceColor} from './comparison.js';
-import {marketPriceTrend} from './history.js?v=48';
+import {marketPriceTrend,rememberQuote} from './history.js?v=49';
 import {createCalendarClock} from './calendar-clock.js';
 import {createPriceLoader} from './price-loader.js';
 
 import {FUELS,validate,localTime,bounds,stats,change,toCSV,importData,litersFromAmount} from './core.js';
 import {API,parseAnnouncement,canUse,selectedPrice,priceImpact} from './prices.js';
 const $=s=>document.querySelector(s),num=(v,d=2)=>v==null?'—':Number(v).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let marketSnapshot=null;
-async function loadMarketHistory(){try{const r=await fetch('./history.json');if(!r.ok)throw Error('History unavailable');const data=await r.json();if(data.schemaVersion!==1||!['week','month','year'].every(k=>Array.isArray(data.periods?.[k])&&data.periods[k].length===6))throw Error('Invalid history');marketSnapshot=data;renderComparison();}catch{}}
+let marketSnapshot=null,marketObservations=[];
+async function loadMarketHistory(){try{const r=await fetch('./history.json?v=49');if(!r.ok)throw Error('History unavailable');const data=await r.json();if(data.schemaVersion!==1||!['week','month','year'].every(k=>Array.isArray(data.periods?.[k])&&data.periods[k].length===6))throw Error('Invalid history');marketSnapshot=data;renderComparison();}catch{}}
 let records=[],db,quote=null,editing=null,defaultFuel=FUELS[0],priceReference=null,savedPriceRecord=null,pricePoller=null,lastPriceError=false,summaryPeriod='month',installEvent;const f=$('#form');
 const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.display='none',5000)};
 function openDB(){return new Promise((ok,no)=>{const r=indexedDB.open('temdee-v1',1);r.onupgradeneeded=()=>{r.result.createObjectStore('records',{keyPath:'id'});r.result.createObjectStore('settings')};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
@@ -19,7 +19,7 @@ function tx(store,mode,action){return new Promise((ok,no)=>{const t=db.transacti
 async function load(){records=await tx('records','readonly',s=>s.getAll());render();backup()}
 const cloudBackup=createFirebaseBackup(firebaseConfig,{onStatus:(state,detail)=>{const el=$('#backupStatus');el.dataset.state=state;el.textContent=({synced:'สำรองแล้ว',pending:'รอสำรอง','too-large':'ข้อมูลสำรองเกินขนาด'})[state]||'';el.title=detail||''}});
 let backupWarning=false;
-function backup(){try{saveBackup(records,defaultFuel);cloudBackup.enqueue(records,defaultFuel)}catch{if(!backupWarning){backupWarning=true;toast('สำรองข้อมูลอัตโนมัติไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม')}}}
+function backup(){try{saveBackup(records,defaultFuel,localStorage,marketObservations);cloudBackup.enqueue(records,defaultFuel,marketObservations)}catch{if(!backupWarning){backupWarning=true;toast('สำรองข้อมูลอัตโนมัติไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม')}}}
 function delta(c,p,unit){const d=change(c,p),signed=v=>v==null?'—':(v>0?'+':'')+num(v),tone=v=>v>0?'delta-up':v<0?'delta-down':'delta-neutral';return '<span class="metric-difference '+tone(d.amount)+'">'+signed(d.amount)+' '+unit+'</span><span class="metric-difference '+tone(d.percent)+'">'+signed(d.percent)+'%</span>'}
 const metric=(title,value,unit,c,p)=>'<div class="card"><small>'+title+'</small><strong>'+num(value)+'</strong><small>'+unit+'</small><p>'+delta(c,p,unit)+'</p></div>';
 function render(){
@@ -33,21 +33,22 @@ function render(){
  renderRecords();
 }
 function renderComparison(){
- const fuel=f.elements.fuel.value||defaultFuel,{start,end,baseline,points,periodStarts}=marketPriceTrend(records,fuel,marketSnapshot,summaryPeriod),w=360,h=270,left=54,right=12,top=24,bottom=58,values=[baseline,...points.map(p=>p.price)].filter(v=>v!==null),low=Math.floor((Math.min(...values,values.length?Infinity:0)-2)/2)*2,high=Math.max(low+4,Math.ceil((Math.max(...values,0)+2)/2)*2);
+ const fuel=f.elements.fuel.value||defaultFuel,{start,end,baseline,points,periodStarts,asOf}=marketPriceTrend(records,fuel,marketSnapshot,summaryPeriod,new Date(),marketObservations),w=360,h=270,left=54,right=12,top=24,bottom=58,values=[baseline,...points.map(p=>p.price)].filter(v=>v!==null),low=Math.floor((Math.min(...values,values.length?Infinity:0)-2)/2)*2,high=Math.max(low+4,Math.ceil((Math.max(...values,0)+2)/2)*2);
  const x=t=>left+(t-start)/(end-start)*(w-left-right),y=v=>h-bottom-(v-low)/(high-low)*(h-top-bottom);
  const grid=Array.from({length:5},(_,i)=>{const v=low+(high-low)*i/4;return '<line x1="'+left+'" x2="'+(w-right)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#edf0eb"/><text x="'+(left-6)+'" y="'+(y(v)+3)+'" text-anchor="end">'+num(v,1)+'</text>'}).join('');
  const ticks=periodStarts.map((t,i)=>{const parts=new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',...(summaryPeriod==='year'?{year:'numeric'}:summaryPeriod==='month'?{month:'short',year:'2-digit'}:{day:'numeric',month:'short'})}).formatToParts(t),part=k=>parts.find(p=>p.type===k)?.value||'',labels=summaryPeriod==='year'?[part('year')]:summaryPeriod==='month'?[part('month'),part('year')]:[part('day'),part('month')],next=periodStarts[i+1]||end,position=x(t+(next-t)/2);return '<text x="'+position+'" y="'+(h-bottom+24)+'" text-anchor="middle">'+labels.map((label,j)=>'<tspan x="'+position+'" dy="'+(j?18:0)+'">'+esc(label)+'</tspan>').join('')+'</text>';}).join('');
  let path='';points.forEach((p,i)=>{if(!i||p.gap){path+='M'+x(p.time)+','+y(p.price);return}const prev=points[i-1],mid=(x(prev.time)+x(p.time))/2;path+=' C'+mid+','+y(prev.price)+' '+mid+','+y(p.price)+' '+x(p.time)+','+y(p.price);});
  const baseY=baseline===null?null:y(baseline),reference=baseline===null?'':'<line x1="'+left+'" x2="'+(w-right)+'" y1="'+baseY+'" y2="'+baseY+'" stroke="#88988d" stroke-dasharray="5 4"/>';
  const line=baseline===null?'<path d="'+path+'" fill="none" stroke="#88988d" stroke-width="2.5"/>':'<defs><clipPath id="above-average"><rect x="0" y="0" width="'+w+'" height="'+baseY+'"/></clipPath><clipPath id="below-average"><rect x="0" y="'+baseY+'" width="'+w+'" height="'+h+'"/></clipPath></defs><path d="'+path+'" fill="none" stroke="#c53232" stroke-width="2.5" clip-path="url(#above-average)"/><path d="'+path+'" fill="none" stroke="#218347" stroke-width="2.5" clip-path="url(#below-average)"/>';
- const dots=points.map(p=>'<circle cx="'+x(p.time)+'" cy="'+y(p.price)+'" r="3" fill="'+priceColor(p.price,baseline)+'"><title>'+'ราคาเฉลี่ยของช่วง'+': '+num(p.price)+' บาท/ลิตร</title></circle>').join('');
+ const dots=points.map(p=>'<circle cx="'+x(p.time)+'" cy="'+y(p.price)+'" r="3" fill="'+priceColor(p.price,baseline)+'"><title>'+'ราคาเฉลี่ยของช่วง'+': '+num(p.price)+' บาท/ลิตร'+(p.coverage<p.expectedDays?' · มีข้อมูล '+p.coverage+' จาก '+p.expectedDays+' วัน':'')+'</title></circle>').join('');
 
  const current=points.find(p=>p.current),plotRight=w-right,averageX=plotRight-4,currentX=current?Math.max(left+54,Math.min(plotRight-4,x(current.time)+48)):null,labelMin=top+12,labelMax=h-bottom-4;
  let averageLabelY=baseline===null?null:Math.max(labelMin,Math.min(labelMax,baseY-8)),currentLabelY=current?Math.max(labelMin,Math.min(labelMax,y(current.price)-8)):null;
  if(averageLabelY!==null&&currentLabelY!==null&&Math.abs(averageX-currentX)<60&&Math.abs(averageLabelY-currentLabelY)<24){const middle=(averageLabelY+currentLabelY)/2,upper=Math.max(labelMin,Math.min(labelMax-24,middle-12)),averageAbove=baseY<=y(current.price);averageLabelY=averageAbove?upper:upper+24;currentLabelY=averageAbove?upper+24:upper;}
  const callout=(title,price,labelX,labelY,color)=>'<g class="price-callout"><title>'+title+'</title><text x="'+labelX+'" y="'+labelY+'" text-anchor="end" font-weight="600" fill="'+color+'">'+num(price)+'</text></g>';
  const labels=(baseline===null?'':callout('ราคาเฉลี่ย',baseline,averageX,averageLabelY,'#88988d'))+(current?callout('ราคาเฉลี่ยช่วงล่าสุด',current.price,currentX,currentLabelY,priceColor(current.price,baseline)):'');
- $('#chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(fuel)+' ราคาเฉลี่ยย้อนหลัง 6 ช่วง"><title>'+esc(fuel)+' · ราคาเฉลี่ยบางจากตามช่วงปฏิทิน · ข้อมูลถึง '+esc(marketSnapshot?.asOf||'—')+' · ราคาเฉลี่ยย้อนหลัง '+num(baseline)+' บาท/ลิตร</title>'+grid+ticks+reference+line+dots+labels+'</svg>';
+ $('#chart').dataset.observedDays=String(marketObservations.length);
+ $('#chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(fuel)+' ราคาเฉลี่ยย้อนหลัง 6 ช่วง"><title>'+esc(fuel)+' · ราคาเฉลี่ยบางจากตามช่วงปฏิทิน · ข้อมูลถึง '+esc(asOf||'—')+' · ราคาเฉลี่ยย้อนหลัง '+num(baseline)+' บาท/ลิตร</title>'+grid+ticks+reference+line+dots+labels+'</svg>';
 }
 
 function renderRecords(){const rows=[...records].sort((a,b)=>b.instant.localeCompare(a.instant));
@@ -132,7 +133,7 @@ async function fetchQuote(){
  if(!navigator.onLine){lastPriceError=true;return false}
  try{
   const r=await fetch(PRICE_ENDPOINT,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('HTTP '+r.status);
-  const next=parseAnnouncement(await r.json());await tx('settings','readwrite',s=>s.put(next,'quote'));quote=next;lastPriceError=false;showQuote();
+  const next=parseAnnouncement(await r.json());const nextObservations=rememberQuote(marketObservations,next),changed=nextObservations!==marketObservations;await tx('settings','readwrite',s=>{s.put(next,'quote');s.put(nextObservations,'marketObservations')});quote=next;marketObservations=nextObservations;if(changed)backup();lastPriceError=false;showQuote();renderComparison();
   if(!usesSavedPrice())return canUse(quote,f.elements.datetime.value)&&!!quote.prices.find(p=>p.fuel===f.elements.fuel.value)&&/บางจาก|bangchak/i.test(f.elements.station.value);
   return canUse(quote,localTime());
  }catch{lastPriceError=true;return false}
@@ -144,7 +145,7 @@ const calendarClock=createCalendarClock(()=>{if(db){render();applyPrice();showQu
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&db){calendarClock.check();render();applyPrice();refresh()}});
 window.addEventListener('focus',()=>{if(db)calendarClock.check()});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e;$('#install').hidden=false});$('#install').onclick=async()=>{if(installEvent){await installEvent.prompt();installEvent=null;$('#install').hidden=true}};
-try{db=await openDB();quote=await tx('settings','readonly',s=>s.get('quote'));const savedDefault=await tx('settings','readonly',s=>s.get('defaultFuel'));if(FUELS.includes(savedDefault))defaultFuel=savedDefault;const current=await tx('records','readonly',s=>s.getAll());if(!current.length){let restored;try{restored=latestBackup()}catch{}if(restored?.records?.length){const rows=restored.records.map(validate);await tx('records','readwrite',s=>{for(const row of rows)s.put(row)});if(FUELS.includes(restored.defaultFuel))defaultFuel=restored.defaultFuel;toast('กู้คืนข้อมูลสำรองแล้ว')}}await load();showQuote();editor();loadMarketHistory();if(pricePreview){f.elements.total.value=500;showQuote();recalculate()}refresh();navigator.storage?.persist?.().catch(()=>{});}catch(e){toast('เปิดพื้นที่จัดเก็บไม่ได้: '+e.message);$('#form button[type=submit]').disabled=true;}
+try{db=await openDB();const savedObservations=await tx('settings','readonly',s=>s.get('marketObservations'));let restoredObservations;try{restoredObservations=latestBackup()?.marketObservations}catch{}marketObservations=(Array.isArray(savedObservations)?savedObservations:Array.isArray(restoredObservations)?restoredObservations:[]).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o?.date||'')&&o.prices&&typeof o.prices==='object');quote=await tx('settings','readonly',s=>s.get('quote'));const savedDefault=await tx('settings','readonly',s=>s.get('defaultFuel'));if(FUELS.includes(savedDefault))defaultFuel=savedDefault;const current=await tx('records','readonly',s=>s.getAll());if(!current.length){let restored;try{restored=latestBackup()}catch{}if(restored?.records?.length){const rows=restored.records.map(validate);await tx('records','readwrite',s=>{for(const row of rows)s.put(row)});if(FUELS.includes(restored.defaultFuel))defaultFuel=restored.defaultFuel;toast('กู้คืนข้อมูลสำรองแล้ว')}}await load();showQuote();editor();loadMarketHistory();if(pricePreview){f.elements.total.value=500;showQuote();recalculate()}refresh();navigator.storage?.persist?.().catch(()=>{});}catch(e){toast('เปิดพื้นที่จัดเก็บไม่ได้: '+e.message);$('#form button[type=submit]').disabled=true;}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 const themeButton=document.querySelector('#themeToggle');

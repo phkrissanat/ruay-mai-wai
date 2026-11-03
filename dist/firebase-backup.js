@@ -34,9 +34,9 @@ export function createFirebaseBackup(config,{storage=localStorage,request=fetch,
   }catch(error){onStatus('pending',error.code||error.cause?.code||error.message);plan(delay);delay=Math.min(delay*2,30000);return false}
   finally{running=false;if(again){again=false;plan(2000)}}
  }
- function enqueue(records,defaultFuel){
+ function enqueue(records,defaultFuel,marketObservations=[]){
   if(!enabled){onStatus('unconfigured');return false}
-  const payload=JSON.stringify({records,defaultFuel});
+  const payload=JSON.stringify({records,defaultFuel,marketObservations});
   if(new TextEncoder().encode(payload).length>850000){onStatus('too-large');return false}
   storage.setItem(queueKey,JSON.stringify({payload,savedAt:new Date().toISOString()}));onStatus('pending');plan(2000);return true;
  }
