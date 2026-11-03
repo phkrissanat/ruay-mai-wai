@@ -21,13 +21,16 @@ export function summarizeHistory(rows,fuels,kind,now=new Date()){
 }
 export function marketPriceTrend(records,fuel,snapshot,kind,now=new Date()){
  const start=bounds(kind,now,-5)[0],end=bounds(kind,now)[1],periodStarts=Array.from({length:6},(_,i)=>bounds(kind,now,i-5)[0]);
- const rows=records.filter(r=>r.fuel===fuel&&Date.parse(r.instant)>=start&&Date.parse(r.instant)<end&&Date.parse(r.instant)<=+now),liters=rows.reduce((s,r)=>s+r.liters,0),baseline=liters>0?rows.reduce((s,r)=>s+r.total,0)/liters:null;
+ let weightedTotal=0,coveredTime=0;
  let previousMissing=true;
  const points=[];
  periodStarts.forEach((t,i)=>{
   const intervalEnd=periodStarts[i+1]||end,period=snapshot?.periods?.[kind]?.find(p=>p.start===t),price=period?.values?.[fuel];
   if(!Number.isFinite(price)||price<=0){previousMissing=true;return;}
+  const duration=period.through-period.start;
+  if(duration>0){weightedTotal+=price*duration;coveredTime+=duration;}
   points.push({time:t+(intervalEnd-t)/2,price,current:i===5,gap:previousMissing,through:period.through});previousMissing=false;
  });
+ const baseline=coveredTime>0?weightedTotal/coveredTime:null;
  return {start,end,baseline,points,periodStarts};
 }

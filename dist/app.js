@@ -3,7 +3,7 @@ import {firebaseConfig} from './firebase-config.js';
 import {createFirebaseBackup} from './firebase-backup.js';
 import {saveBackup,latestBackup} from './backup.js';
 import {priceColor} from './comparison.js';
-import {marketPriceTrend} from './history.js';
+import {marketPriceTrend} from './history.js?v=48';
 import {createCalendarClock} from './calendar-clock.js';
 import {createPriceLoader} from './price-loader.js';
 
@@ -40,14 +40,14 @@ function renderComparison(){
  let path='';points.forEach((p,i)=>{if(!i||p.gap){path+='M'+x(p.time)+','+y(p.price);return}const prev=points[i-1],mid=(x(prev.time)+x(p.time))/2;path+=' C'+mid+','+y(prev.price)+' '+mid+','+y(p.price)+' '+x(p.time)+','+y(p.price);});
  const baseY=baseline===null?null:y(baseline),reference=baseline===null?'':'<line x1="'+left+'" x2="'+(w-right)+'" y1="'+baseY+'" y2="'+baseY+'" stroke="#88988d" stroke-dasharray="5 4"/>';
  const line=baseline===null?'<path d="'+path+'" fill="none" stroke="#88988d" stroke-width="2.5"/>':'<defs><clipPath id="above-average"><rect x="0" y="0" width="'+w+'" height="'+baseY+'"/></clipPath><clipPath id="below-average"><rect x="0" y="'+baseY+'" width="'+w+'" height="'+h+'"/></clipPath></defs><path d="'+path+'" fill="none" stroke="#c53232" stroke-width="2.5" clip-path="url(#above-average)"/><path d="'+path+'" fill="none" stroke="#218347" stroke-width="2.5" clip-path="url(#below-average)"/>';
- const dots=points.map(p=>'<circle cx="'+x(p.time)+'" cy="'+y(p.price)+'" r="3" fill="'+priceColor(p.price,baseline)+'"><title>'+(p.current?'ราคาปัจจุบัน':'ราคาที่บันทึก')+': '+num(p.price)+' บาท/ลิตร</title></circle>').join('');
+ const dots=points.map(p=>'<circle cx="'+x(p.time)+'" cy="'+y(p.price)+'" r="3" fill="'+priceColor(p.price,baseline)+'"><title>'+'ราคาเฉลี่ยของช่วง'+': '+num(p.price)+' บาท/ลิตร</title></circle>').join('');
 
  const current=points.find(p=>p.current),plotRight=w-right,averageX=plotRight-4,currentX=current?Math.max(left+54,Math.min(plotRight-4,x(current.time)+48)):null,labelMin=top+12,labelMax=h-bottom-4;
  let averageLabelY=baseline===null?null:Math.max(labelMin,Math.min(labelMax,baseY-8)),currentLabelY=current?Math.max(labelMin,Math.min(labelMax,y(current.price)-8)):null;
  if(averageLabelY!==null&&currentLabelY!==null&&Math.abs(averageX-currentX)<60&&Math.abs(averageLabelY-currentLabelY)<24){const middle=(averageLabelY+currentLabelY)/2,upper=Math.max(labelMin,Math.min(labelMax-24,middle-12)),averageAbove=baseY<=y(current.price);averageLabelY=averageAbove?upper:upper+24;currentLabelY=averageAbove?upper+24:upper;}
  const callout=(title,price,labelX,labelY,color)=>'<g class="price-callout"><title>'+title+'</title><text x="'+labelX+'" y="'+labelY+'" text-anchor="end" font-weight="600" fill="'+color+'">'+num(price)+'</text></g>';
  const labels=(baseline===null?'':callout('ราคาเฉลี่ย',baseline,averageX,averageLabelY,'#88988d'))+(current?callout('ราคาเฉลี่ยช่วงล่าสุด',current.price,currentX,currentLabelY,priceColor(current.price,baseline)):'');
- $('#chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(fuel)+' ราคาเฉลี่ยย้อนหลัง 6 ช่วง"><title>'+esc(fuel)+' · ราคาเฉลี่ยบางจากตามช่วงปฏิทิน · ข้อมูลถึง '+esc(marketSnapshot?.asOf||'—')+' · ราคาเฉลี่ยจากบันทึก '+num(baseline)+' บาท/ลิตร</title>'+grid+ticks+reference+line+dots+labels+'</svg>';
+ $('#chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(fuel)+' ราคาเฉลี่ยย้อนหลัง 6 ช่วง"><title>'+esc(fuel)+' · ราคาเฉลี่ยบางจากตามช่วงปฏิทิน · ข้อมูลถึง '+esc(marketSnapshot?.asOf||'—')+' · ราคาเฉลี่ยย้อนหลัง '+num(baseline)+' บาท/ลิตร</title>'+grid+ticks+reference+line+dots+labels+'</svg>';
 }
 
 function renderRecords(){const rows=[...records].sort((a,b)=>b.instant.localeCompare(a.instant));
