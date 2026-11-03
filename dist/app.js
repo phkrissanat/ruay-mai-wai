@@ -1,8 +1,8 @@
-import {createGoogleAccount} from './google-account.js?v=50';
+import {createGoogleAccount} from './google-account.js?v=52';
 import {accountData} from './account-data.js?v=50';
 import {PRICE_ENDPOINT} from './price-config.js';
 import {firebaseConfig} from './firebase-config.js';
-import {createFirebaseBackup} from './firebase-backup.js?v=50';
+import {createFirebaseBackup} from './firebase-backup.js?v=52';
 import {saveBackup,latestBackup} from './backup.js?v=50';
 import {priceColor} from './comparison.js';
 import {marketPriceTrend,rememberQuote} from './history.js?v=50';
@@ -29,7 +29,7 @@ function accountErrorText(error){return error?.code==='auth/unauthorized-domain'
 async function storeAccountData(data,uid){await new Promise((resolve,reject)=>{const t=db.transaction(['records','settings'],'readwrite'),store=t.objectStore('records'),settings=t.objectStore('settings');store.clear();for(const r of data.records)store.put(r);settings.put(data.defaultFuel,'defaultFuel');settings.put(data.marketObservations,'marketObservations');settings.put(uid,'cloudOwner');t.oncomplete=resolve;t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error)});records=data.records;defaultFuel=data.defaultFuel;marketObservations=data.marketObservations;render();editor();showQuote();}
 async function handleGoogleUser(user){
  await cloudBackup.pause();accountBusy=true;accountButton.disabled=true;accountButton.dataset.signedIn=String(!!user);
- if(!user){const owner=await tx('settings','readonly',s=>s.get('cloudOwner'));accountBusy=false;accountFailed=false;accountButton.disabled=false;accountButton.setAttribute('aria-label','เข้าสู่ระบบด้วย Google');accountButton.title='เข้าสู่ระบบด้วย Google';if(!owner){backup();cloudBackup.resume();}return;}
+ if(!user){const owner=await tx('settings','readonly',s=>s.get('cloudOwner'));accountBusy=false;accountFailed=false;accountButton.disabled=false;accountButton.setAttribute('aria-label','เข้าสู่ระบบด้วย Google');accountButton.title='เข้าสู่ระบบด้วย Google';return;}
  try{const owner=await tx('settings','readonly',s=>s.get('cloudOwner')),remote=await cloudBackup.restore(),local={records,defaultFuel,marketObservations},next=accountData(local,remote?.data,owner,user.uid);await storeAccountData(next,user.uid);backup();cloudBackup.resume();accountFailed=false;accountButton.title=user.email||'บัญชี Google';accountButton.setAttribute('aria-label','บัญชี Google '+(user.email||''));$('#accountEmail').textContent=user.email||'';$('#accountMessage').textContent=remote&&owner!==user.uid?'กู้คืนข้อมูลแล้ว':'สำรองข้อมูลอัตโนมัติ';if(remote&&owner!==user.uid)toast('กู้คืนข้อมูลจากบัญชี Google แล้ว');}
  finally{accountBusy=false;accountButton.disabled=false;}
 }
@@ -38,7 +38,7 @@ accountButton.onclick=async()=>{
  if(accountBusy)return;
  if(googleAccount.current()&&!accountFailed){$('#accountEmail').textContent=googleAccount.current().email||'';$('#accountMessage').textContent=$('#backupStatus').dataset.state==='synced'?'สำรองแล้ว':'กำลังสำรองข้อมูล';accountDialog.showModal();return;}
  try{const paused=cloudBackup.pause();if(googleAccount.current()){await paused;await handleGoogleUser(googleAccount.current());return;}await googleAccount.signIn();await paused;}
- catch(error){accountError(error);if(error?.code==='auth/popup-closed-by-user'||error?.code==='auth/cancelled-popup-request'){if(!await tx('settings','readonly',s=>s.get('cloudOwner')))cloudBackup.resume();return;}toast(accountErrorText(error));bootAccount();}
+ catch(error){accountError(error);if(error?.code==='auth/popup-closed-by-user'||error?.code==='auth/cancelled-popup-request'){return;}toast(accountErrorText(error));bootAccount();}
 };
 $('#accountClose').onclick=()=>accountDialog.close();
 $('#accountSignOut').onclick=async()=>{try{await cloudBackup.flush();await cloudBackup.pause();await googleAccount.signOut();accountDialog.close();}catch(error){$('#accountMessage').textContent=accountErrorText(error)}};

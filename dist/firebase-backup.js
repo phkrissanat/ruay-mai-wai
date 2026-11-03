@@ -1,22 +1,13 @@
 export function createFirebaseBackup(config,{storage=localStorage,request=fetch,schedule=setTimeout,cancel=clearTimeout,onStatus=()=>{},sessionProvider=null,startPaused=false}={}){
- const queueKey='ruay-firebase-pending-v1',sessionKey='ruay-firebase-session-v1';
+ const queueKey='ruay-firebase-pending-v1';
+ storage.removeItem('ruay-firebase-session-v1');
  let timer=null,running=false,again=false,delay=2000,paused=startPaused;const idleWaiters=[];
  const enabled=!!config?.apiKey&&!!config?.projectId;
  async function json(url,options){const r=await request(url,{...options,signal:AbortSignal.timeout(15000)});if(!r.ok){let data;try{data=await r.json()}catch{}const error=Error(data?.error?.message||'Firebase HTTP '+r.status);error.code=data?.error?.status||data?.error?.message||String(r.status);error.httpStatus=r.status;throw error}return r.json()}
  async function auth(){
-  const supplied=await sessionProvider?.();if(supplied)return supplied;
-  let session=JSON.parse(storage.getItem(sessionKey)||'null');
-  if(session?.expiresAt>Date.now()+60000)return session;
-  let data;
-  if(session?.refreshToken){
-   data=await json('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(config.apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:session.refreshToken}).toString()});
-   session={uid:data.user_id,idToken:data.id_token,refreshToken:data.refresh_token,expiresAt:Date.now()+Number(data.expires_in)*1000};
-  }else{
-   data=await json('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(config.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
-   session={uid:data.localId,idToken:data.idToken,refreshToken:data.refreshToken,expiresAt:Date.now()+Number(data.expiresIn)*1000};
-  }
-  if(!session.uid||!session.idToken||!session.refreshToken)throw Error('Firebase authentication failed');
-  storage.setItem(sessionKey,JSON.stringify(session));return session;
+  const session=await sessionProvider?.();
+  if(!session?.uid||!session?.idToken||session.provider!=='google.com'){const error=Error('Google sign-in required');error.code='auth-required';throw error;}
+  return session;
  }
  function plan(ms){if(paused)return;if(timer!==null)cancel(timer);timer=schedule(()=>{timer=null;flush()},ms)}
  async function flush(){
@@ -32,7 +23,7 @@ export function createFirebaseBackup(config,{storage=localStorage,request=fetch,
    if(verified.fields?.payload?.stringValue!==payload.payload)throw Error('Backup verification failed');
    if(storage.getItem(queueKey)===pending)storage.removeItem(queueKey);else again=true;
    delay=2000;onStatus('synced');return true;
-  }catch(error){onStatus('pending',error.code||error.cause?.code||error.message);plan(delay);delay=Math.min(delay*2,30000);return false}
+  }catch(error){if(error.code==='auth-required'){onStatus('signed-out');return false;}onStatus('pending',error.code||error.cause?.code||error.message);plan(delay);delay=Math.min(delay*2,30000);return false}
   finally{running=false;idleWaiters.splice(0).forEach(resolve=>resolve());if(again){again=false;plan(2000)}}
  }
  function enqueue(records,defaultFuel,marketObservations=[]){
