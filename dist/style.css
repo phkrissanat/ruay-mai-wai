@@ -274,3 +274,5 @@ header .brand{font-size:33px}
 #accountDialog{inset:0;height:fit-content;min-height:0;max-height:calc(100dvh - 40px);margin:auto;border-radius:16px;padding:24px}
 
 header .brand{display:flex;align-items:center;justify-content:center;width:min(250px,calc(100vw - 112px));line-height:0}header .brand-logo{display:block;width:100%;height:64px;object-fit:contain}
+
+header .brand-logo{transform:scaleX(1.3);transform-origin:center}
