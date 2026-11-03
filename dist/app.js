@@ -1,9 +1,11 @@
+import {createGoogleAccount} from './google-account.js?v=50';
+import {accountData} from './account-data.js?v=50';
 import {PRICE_ENDPOINT} from './price-config.js';
 import {firebaseConfig} from './firebase-config.js';
-import {createFirebaseBackup} from './firebase-backup.js?v=49';
-import {saveBackup,latestBackup} from './backup.js?v=49';
+import {createFirebaseBackup} from './firebase-backup.js?v=50';
+import {saveBackup,latestBackup} from './backup.js?v=50';
 import {priceColor} from './comparison.js';
-import {marketPriceTrend,rememberQuote} from './history.js?v=49';
+import {marketPriceTrend,rememberQuote} from './history.js?v=50';
 import {createCalendarClock} from './calendar-clock.js';
 import {createPriceLoader} from './price-loader.js';
 
@@ -11,13 +13,36 @@ import {FUELS,validate,localTime,bounds,stats,change,toCSV,importData,litersFrom
 import {API,parseAnnouncement,canUse,selectedPrice,priceImpact} from './prices.js';
 const $=s=>document.querySelector(s),num=(v,d=2)=>v==null?'—':Number(v).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let marketSnapshot=null,marketObservations=[];
-async function loadMarketHistory(){try{const r=await fetch('./history.json?v=49');if(!r.ok)throw Error('History unavailable');const data=await r.json();if(data.schemaVersion!==1||!['week','month','year'].every(k=>Array.isArray(data.periods?.[k])&&data.periods[k].length===6))throw Error('Invalid history');marketSnapshot=data;renderComparison();}catch{}}
+async function loadMarketHistory(){try{const r=await fetch('./history.json?v=50');if(!r.ok)throw Error('History unavailable');const data=await r.json();if(data.schemaVersion!==1||!['week','month','year'].every(k=>Array.isArray(data.periods?.[k])&&data.periods[k].length===6))throw Error('Invalid history');marketSnapshot=data;renderComparison();}catch{}}
 let records=[],db,quote=null,editing=null,defaultFuel=FUELS[0],priceReference=null,savedPriceRecord=null,pricePoller=null,lastPriceError=false,summaryPeriod='month',installEvent;const f=$('#form');
 const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.display='none',5000)};
 function openDB(){return new Promise((ok,no)=>{const r=indexedDB.open('temdee-v1',1);r.onupgradeneeded=()=>{r.result.createObjectStore('records',{keyPath:'id'});r.result.createObjectStore('settings')};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 function tx(store,mode,action){return new Promise((ok,no)=>{const t=db.transaction(store,mode);let r;try{r=action(t.objectStore(store))}catch(e){no(e);return}t.oncomplete=()=>ok(r?.result);t.onerror=()=>no(t.error);t.onabort=()=>no(t.error||Error('บันทึกไม่สำเร็จ'))})}
 async function load(){records=await tx('records','readonly',s=>s.getAll());render();backup()}
-const cloudBackup=createFirebaseBackup(firebaseConfig,{onStatus:(state,detail)=>{const el=$('#backupStatus');el.dataset.state=state;el.textContent=({synced:'สำรองแล้ว',pending:'รอสำรอง','too-large':'ข้อมูลสำรองเกินขนาด'})[state]||'';el.title=detail||''}});
+const googleAccount=createGoogleAccount(firebaseConfig,{onUser:handleGoogleUser,onError:accountError});
+let accountBusy=false,accountFailed=false;
+const cloudBackup=createFirebaseBackup(firebaseConfig,{startPaused:true,sessionProvider:()=>googleAccount.session(),onStatus:(state,detail)=>{const el=$('#backupStatus');el.dataset.state=state;el.textContent=({synced:'สำรองแล้ว',pending:'รอสำรอง','too-large':'ข้อมูลสำรองเกินขนาด'})[state]||'';el.title=detail||''}});
+
+const accountButton=$('#accountButton'),accountDialog=$('#accountDialog');
+function accountError(error){accountBusy=false;accountFailed=true;accountButton.disabled=false;accountButton.title='เชื่อมบัญชีไม่สำเร็จ';if(accountDialog.open)$('#accountMessage').textContent=accountErrorText(error);}
+function accountErrorText(error){return error?.code==='auth/unauthorized-domain'?'ต้องเพิ่ม phkrissanat.github.io ใน Authorized domains ของ Firebase':error?.code==='auth/popup-blocked'?'เบราว์เซอร์ปิดกั้นหน้าต่างเข้าสู่ระบบ':error?.code==='auth/popup-closed-by-user'?'ยกเลิกการเข้าสู่ระบบ':'เชื่อมบัญชีหรือกู้คืนไม่สำเร็จ กรุณาลองอีกครั้ง';}
+async function storeAccountData(data,uid){await new Promise((resolve,reject)=>{const t=db.transaction(['records','settings'],'readwrite'),store=t.objectStore('records'),settings=t.objectStore('settings');store.clear();for(const r of data.records)store.put(r);settings.put(data.defaultFuel,'defaultFuel');settings.put(data.marketObservations,'marketObservations');settings.put(uid,'cloudOwner');t.oncomplete=resolve;t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error)});records=data.records;defaultFuel=data.defaultFuel;marketObservations=data.marketObservations;render();editor();showQuote();}
+async function handleGoogleUser(user){
+ await cloudBackup.pause();accountBusy=true;accountButton.disabled=true;accountButton.dataset.signedIn=String(!!user);
+ if(!user){const owner=await tx('settings','readonly',s=>s.get('cloudOwner'));accountBusy=false;accountFailed=false;accountButton.disabled=false;accountButton.setAttribute('aria-label','เข้าสู่ระบบด้วย Google');accountButton.title='เข้าสู่ระบบด้วย Google';if(!owner){backup();cloudBackup.resume();}return;}
+ try{const owner=await tx('settings','readonly',s=>s.get('cloudOwner')),remote=await cloudBackup.restore(),local={records,defaultFuel,marketObservations},next=accountData(local,remote?.data,owner,user.uid);await storeAccountData(next,user.uid);backup();cloudBackup.resume();accountFailed=false;accountButton.title=user.email||'บัญชี Google';accountButton.setAttribute('aria-label','บัญชี Google '+(user.email||''));$('#accountEmail').textContent=user.email||'';$('#accountMessage').textContent=remote&&owner!==user.uid?'กู้คืนข้อมูลแล้ว':'สำรองข้อมูลอัตโนมัติ';if(remote&&owner!==user.uid)toast('กู้คืนข้อมูลจากบัญชี Google แล้ว');}
+ finally{accountBusy=false;accountButton.disabled=false;}
+}
+async function bootAccount(){try{await googleAccount.start();}catch(error){accountError(error);}}
+accountButton.onclick=async()=>{
+ if(accountBusy)return;
+ if(googleAccount.current()&&!accountFailed){$('#accountEmail').textContent=googleAccount.current().email||'';$('#accountMessage').textContent=$('#backupStatus').dataset.state==='synced'?'สำรองแล้ว':'กำลังสำรองข้อมูล';accountDialog.showModal();return;}
+ try{const paused=cloudBackup.pause();if(googleAccount.current()){await paused;await handleGoogleUser(googleAccount.current());return;}await googleAccount.signIn();await paused;}
+ catch(error){accountError(error);if(error?.code==='auth/popup-closed-by-user'||error?.code==='auth/cancelled-popup-request'){if(!await tx('settings','readonly',s=>s.get('cloudOwner')))cloudBackup.resume();return;}toast(accountErrorText(error));bootAccount();}
+};
+$('#accountClose').onclick=()=>accountDialog.close();
+$('#accountSignOut').onclick=async()=>{try{await cloudBackup.flush();await cloudBackup.pause();await googleAccount.signOut();accountDialog.close();}catch(error){$('#accountMessage').textContent=accountErrorText(error)}};
+
 let backupWarning=false;
 function backup(){try{saveBackup(records,defaultFuel,localStorage,marketObservations);cloudBackup.enqueue(records,defaultFuel,marketObservations)}catch{if(!backupWarning){backupWarning=true;toast('สำรองข้อมูลอัตโนมัติไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม')}}}
 function delta(c,p,unit){const d=change(c,p),signed=v=>v==null?'—':(v>0?'+':'')+num(v),tone=v=>v>0?'delta-up':v<0?'delta-down':'delta-neutral';return '<span class="metric-difference '+tone(d.amount)+'">'+signed(d.amount)+' '+unit+'</span><span class="metric-difference '+tone(d.percent)+'">'+signed(d.percent)+'%</span>'}
@@ -145,7 +170,7 @@ const calendarClock=createCalendarClock(()=>{if(db){render();applyPrice();showQu
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&db){calendarClock.check();render();applyPrice();refresh()}});
 window.addEventListener('focus',()=>{if(db)calendarClock.check()});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e;$('#install').hidden=false});$('#install').onclick=async()=>{if(installEvent){await installEvent.prompt();installEvent=null;$('#install').hidden=true}};
-try{db=await openDB();const savedObservations=await tx('settings','readonly',s=>s.get('marketObservations'));let restoredObservations;try{restoredObservations=latestBackup()?.marketObservations}catch{}marketObservations=(Array.isArray(savedObservations)?savedObservations:Array.isArray(restoredObservations)?restoredObservations:[]).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o?.date||'')&&o.prices&&typeof o.prices==='object');quote=await tx('settings','readonly',s=>s.get('quote'));const savedDefault=await tx('settings','readonly',s=>s.get('defaultFuel'));if(FUELS.includes(savedDefault))defaultFuel=savedDefault;const current=await tx('records','readonly',s=>s.getAll());if(!current.length){let restored;try{restored=latestBackup()}catch{}if(restored?.records?.length){const rows=restored.records.map(validate);await tx('records','readwrite',s=>{for(const row of rows)s.put(row)});if(FUELS.includes(restored.defaultFuel))defaultFuel=restored.defaultFuel;toast('กู้คืนข้อมูลสำรองแล้ว')}}await load();showQuote();editor();loadMarketHistory();if(pricePreview){f.elements.total.value=500;showQuote();recalculate()}refresh();navigator.storage?.persist?.().catch(()=>{});}catch(e){toast('เปิดพื้นที่จัดเก็บไม่ได้: '+e.message);$('#form button[type=submit]').disabled=true;}
+try{db=await openDB();const savedObservations=await tx('settings','readonly',s=>s.get('marketObservations'));let restoredObservations;try{restoredObservations=latestBackup()?.marketObservations}catch{}marketObservations=(Array.isArray(savedObservations)?savedObservations:Array.isArray(restoredObservations)?restoredObservations:[]).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o?.date||'')&&o.prices&&typeof o.prices==='object');quote=await tx('settings','readonly',s=>s.get('quote'));const savedDefault=await tx('settings','readonly',s=>s.get('defaultFuel'));if(FUELS.includes(savedDefault))defaultFuel=savedDefault;const current=await tx('records','readonly',s=>s.getAll());if(!current.length){let restored;try{restored=latestBackup()}catch{}if(restored?.records?.length){const rows=restored.records.map(validate);await tx('records','readwrite',s=>{for(const row of rows)s.put(row)});if(FUELS.includes(restored.defaultFuel))defaultFuel=restored.defaultFuel;toast('กู้คืนข้อมูลสำรองแล้ว')}}await load();showQuote();editor();loadMarketHistory();bootAccount();if(pricePreview){f.elements.total.value=500;showQuote();recalculate()}refresh();navigator.storage?.persist?.().catch(()=>{});}catch(e){toast('เปิดพื้นที่จัดเก็บไม่ได้: '+e.message);$('#form button[type=submit]').disabled=true;}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 const themeButton=document.querySelector('#themeToggle');

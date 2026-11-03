@@ -268,3 +268,5 @@ header .brand{font-size:33px}
 .comparison-panel svg text{font-size:13.5px}
 
 .comparison-panel>#period{height:44.1px;padding:0;margin:0 0 12px}.comparison-panel>#period button{min-height:44.1px;padding:4px;line-height:1.4}
+
+#accountButton{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:36px;height:40px;padding:8px;border:0;background:transparent;border-radius:50%;color:var(--ink)}#accountButton svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}#accountButton[data-signed-in=true]{color:var(--accent)}#accountDialog{max-width:calc(100vw - 32px);width:340px;background:var(--bg);font-size:14px}#accountEmail{overflow-wrap:anywhere}.account-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}@media(max-width:340px){header .brand{font-size:28px}}
