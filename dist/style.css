@@ -264,3 +264,5 @@ header .brand{font-size:33px}
 [data-theme=dark] .comparison-panel .price-callout text[fill="#218347"]{fill:#9be8b7}
 
 .comparison-panel svg text{font-size:15.75px}
+
+.comparison-panel svg text{font-size:13.5px}
