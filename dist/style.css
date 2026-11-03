@@ -266,3 +266,5 @@ header .brand{font-size:33px}
 .comparison-panel svg text{font-size:15.75px}
 
 .comparison-panel svg text{font-size:13.5px}
+
+.comparison-panel>#period{height:44.1px;padding:0;margin:0 0 12px}.comparison-panel>#period button{min-height:44.1px;padding:4px;line-height:1.4}
