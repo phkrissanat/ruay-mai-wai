@@ -253,3 +253,14 @@ header .brand{font-size:33px}
 .comparison-panel .chart{margin-top:18px}
 
 .comparison-panel h3{justify-content:center;text-align:center}
+
+.comparison-panel .price-callout text{fill:inherit;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.comparison-panel .price-callout text[fill="#88988d"]{fill:#88988d}
+.comparison-panel .price-callout text[fill="#c53232"]{fill:#c53232}
+.comparison-panel .price-callout text[fill="#218347"]{fill:#218347}
+[data-theme=dark] .comparison-panel .price-callout text{stroke:#26332b}
+[data-theme=dark] .comparison-panel .price-callout text[fill="#88988d"]{fill:#c2cec6}
+[data-theme=dark] .comparison-panel .price-callout text[fill="#c53232"]{fill:#ffaaaa}
+[data-theme=dark] .comparison-panel .price-callout text[fill="#218347"]{fill:#9be8b7}
+
+.comparison-panel svg text{font-size:15.75px}
