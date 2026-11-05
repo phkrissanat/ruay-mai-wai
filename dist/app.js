@@ -146,12 +146,8 @@ function showQuote(){
  const impact=p.upcoming?priceImpact(p,f.elements.total.value):null;
  const impactText=impact?'<div class="announcement-impact '+(p.delta>0?'price-up':'price-down')+'">ส่วนต่างปริมาณน้ำมัน <span>'+(impact.litersChange>0?'+':'')+num(impact.litersChange,3)+' ลิตร</span></div>':'';
  const announcement=p.upcoming?'<div class="price-announcement"><span class="announcement-label">ประกาศปรับราคาใหม่'+(pricePreview?' <small>จำลอง</small>':'')+'</span><div class="price-effective">'+esc(fullDate(p.effectiveText))+'</div><div class="announcement-price"><strong>'+num(p.tomorrow)+'</strong> <span class="price-change '+(p.delta>0?'price-up':'price-down')+'">('+(p.delta>0?'+':'')+num(p.delta)+')</span> <small>บาท/ลิตร</small></div>'+impactText+'</div>':'<div class="no-announcement">ยังไม่มีราคาใหม่</div>';
- const checkedAt=Date.parse(displayed.fetchedAt);
- const checkedDate=Number.isFinite(checkedAt)?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',day:'numeric',month:'long',year:'numeric'}).format(new Date(checkedAt)):'—';
- const checkedTime=Number.isFinite(checkedAt)?new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(checkedAt)):null;
- const checked='<div class="price-effective price-checked"><div>ตรวจสอบล่าสุด</div><div>'+esc(checkedDate)+'</div>'+(checkedTime?'<div>เวลา '+esc(checkedTime)+' น.</div>':'')+'</div>';
 
- target.innerHTML='<div class="price-overview"><div class="price-current"><span class="selected-price-value">'+num(p.today)+' <small>บาท/ลิตร'+(fresh?'':' · ข้อมูลล่าสุดที่เก็บไว้')+'</small></span></div><div class="price-adjustment">'+announcement+checked+'</div></div>';
+ target.innerHTML='<div class="price-overview"><div class="price-current"><span class="selected-price-value">'+num(p.today)+' <small>บาท/ลิตร'+(fresh?'':' · ข้อมูลล่าสุดที่เก็บไว้')+'</small></span></div><div class="price-adjustment">'+announcement+'</div></div>';
 
 }
 async function fetchQuote(){
